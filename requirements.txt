@@ -1,0 +1,4 @@
+Flask==3.0.3
+Flask-CORS==4.0.1
+yfinance==0.2.40
+gunicorn
