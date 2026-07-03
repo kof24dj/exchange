@@ -10,10 +10,10 @@ app = Flask(__name__)
 CORS(app)
 
 CURRENCY_TICKS = {
-    "USD": "TWD=X",
+    "USD": "USDTWD=X",
     "JPY": "JPYTWD=X",
     "EUR": "EURTWD=X",
-    "VND_USD": "VND=X"
+    "VND_USD": "USDVND=X"
 }
 
 # 增加一個首頁路徑，讓 Render 的健康檢查 (Health Check) 能夠順利通過
