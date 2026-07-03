@@ -1,3 +1,4 @@
+import os
 from flask import Flask, jsonify
 from flask_cors import CORS
 import yfinance as yf
@@ -15,14 +16,29 @@ CURRENCY_TICKS = {
     "VND_USD": "VND=X"
 }
 
+# 增加一個首頁路徑，讓 Render 的健康檢查 (Health Check) 能夠順利通過
+@app.route("/", methods=["GET"])
+def home():
+    return "匯率 API 伺服器已成功啟動並在雲端運行中！請前往 /api/rates 獲取資料。"
+
 def fetch_all_rates_5y():
     """從 Yahoo 財經獲取 5 年的歷史數據"""
     raw_dfs = {}
+    
+    # 建立一個帶有偽裝 User-Agent 的 Session，避免被 Yahoo 當作機器人擋住
+    session = requests.Session()
+    session.headers.update({
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    })
+
     for key, ticker in CURRENCY_TICKS.items():
         try:
             print(f"📡 正在從 Yahoo 財經獲取 {key} 的 5 年歷史數據...")
-            ticker_data = yf.Ticker(ticker)
+            
+            # 必須將剛剛建立的 session 傳遞給 yfinance
+            ticker_data = yf.Ticker(ticker, session=session)
             df = ticker_data.history(period="5y")
+            
             if not df.empty:
                 df.index = df.index.strftime("%Y-%m-%d")
                 raw_dfs[key] = df["Close"]
@@ -60,4 +76,6 @@ def get_rates():
 
 if __name__ == "__main__":
     print("正在啟動【Yahoo財經 越南盾習慣優化版】匯率 API 伺服器...")
-    app.run(debug=True, port=5000)
+    # 讓雲端平台(如 Render) 自行決定 Port 號，並允許外部 IP 連線
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
